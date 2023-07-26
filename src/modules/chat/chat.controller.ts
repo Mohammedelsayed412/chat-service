@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Req, Res } from '@nestjs/common';
 import { ApiHeader, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express, {Request, Response} from 'express';
 import { ChatService } from './chat.service';
@@ -43,8 +43,12 @@ export class ChatController {
   @Post('/webhook')
   postChats(
     @Body() body: any,
+    @Req() request: Request
     // @Res() res: Response,
   ){
+    // console.log('request',request);
+    
+
     let chatservice  = this.chatservice
     // Checks if this is an event from a page subscription
     if (body.object === 'page') {
