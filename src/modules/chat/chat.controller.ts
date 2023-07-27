@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, RawBodyRequest, Req, Res } from '@nestjs/common';
 import { ApiHeader, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express, {Request, Response} from 'express';
 import { ChatService } from './chat.service';
+import { escape, unescape } from 'querystring';
 
 
 @Controller('chats')
@@ -43,26 +44,25 @@ export class ChatController {
   @Post('/webhook')
   postChats(
     @Body() body: any,
-    @Req() request: Request
+    @Req() req: RawBodyRequest<Request>,
     // @Res() res: Response,
   ){
-    // console.log('request',request);
-    
-
+  
     let chatservice  = this.chatservice
     // Checks if this is an event from a page subscription
     if (body.object === 'page') {
-        // Iterates over each entry - there may be multiple if batched
-        
-        body.entry.forEach(function (entry) {
-            // Gets the body of the webhook event
-            let webhookEvent = entry.messaging[0];
-            // Get the sender PSID
-            let senderPsid = webhookEvent.sender.id;
-            console.log('Sender PSID: ' + senderPsid);
-            if (webhookEvent.message) {
-              chatservice.callSendAPI(senderPsid, {"text": "hi"});
-            }
+      // Iterates over each entry - there may be multiple if batched
+      
+      body.entry.forEach(function (entry) {          
+        // Gets the body of the webhook event
+        let webhookEvent = entry.messaging[0];
+        // Get the sender PSID
+        let senderPsid = webhookEvent.sender.id;
+        console.log('Sender PSID: ' + senderPsid);
+        if (webhookEvent.message) {            
+            chatservice.verifyRequestSignature(req, req.rawBody)
+            chatservice.callSendAPI(senderPsid, {"text": "hi"});
+          }
         });
     }
   }

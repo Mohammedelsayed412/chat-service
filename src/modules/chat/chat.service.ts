@@ -51,8 +51,6 @@ export class ChatService {
       var elements = signature.split("=");
       var signatureHash = elements[1];
       var expectedHash = createHmac("sha256", process.env.APP_SECRET).update(buf).digest("hex");
-      console.log('expectedHash',expectedHash);
-      console.log('signatureHash',signatureHash);
       
       if (signatureHash != expectedHash) {
         throw new Error("Couldn't validate the request signature.");
