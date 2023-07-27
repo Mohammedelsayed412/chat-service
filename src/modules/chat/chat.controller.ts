@@ -2,7 +2,6 @@ import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Raw
 import { ApiHeader, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import express, {Request, Response} from 'express';
 import { ChatService } from './chat.service';
-import { escape, unescape } from 'querystring';
 
 
 @Controller('chats')
@@ -45,23 +44,25 @@ export class ChatController {
   postChats(
     @Body() body: any,
     @Req() req: RawBodyRequest<Request>,
-    // @Res() res: Response,
-  ){
-  
+    @Res() res: Response,
+  ){    
     let chatservice  = this.chatservice
     // Checks if this is an event from a page subscription
     if (body.object === 'page') {
+      res.status(200).send();
       // Iterates over each entry - there may be multiple if batched
-      
       body.entry.forEach(function (entry) {          
         // Gets the body of the webhook event
         let webhookEvent = entry.messaging[0];
         // Get the sender PSID
         let senderPsid = webhookEvent.sender.id;
         console.log('Sender PSID: ' + senderPsid);
-        if (webhookEvent.message) {            
-            chatservice.verifyRequestSignature(req, req.rawBody)
-            chatservice.callSendAPI(senderPsid, {"text": "hi"});
+        // check if webhookEvent is not echo from our response to user
+        if (webhookEvent.message && !webhookEvent.message.is_echo) {       
+            // Validate payload signature
+            if(chatservice.verifyRequestSignature(req, req.rawBody))  {
+              chatservice.callSendAPI(senderPsid, {"text": "hi"});
+            }
           }
         });
     }
